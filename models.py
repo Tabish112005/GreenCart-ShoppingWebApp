@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from app import app
+from werkzeug.security import generate_password_hash, check_password_hash
 db = SQLAlchemy(app)
 
 ## models
@@ -10,6 +11,17 @@ class User(db.Model):
     username = db.Column(db.String(32), unique=True, nullable=False)
     passhash = db.Column(db.String(512), nullable=False)
     name = db.Column(db.String(64), nullable=False)
+
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute.')
+    
+    @password.setter
+    def password(self, password):
+        self.passhash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.passhash, password)
 
 class Product(db.Model):
     __tablename__ = 'product'
@@ -42,3 +54,7 @@ class Order(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     total_amount = db.Column(db.Float, nullable=False)
     datetime = db.Column(db.DateTime, nullable=False)
+
+# create database tables if they don't exist
+with app.app_context():
+    db.create_all()
