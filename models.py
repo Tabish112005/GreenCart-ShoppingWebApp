@@ -11,6 +11,7 @@ class User(db.Model):
     username = db.Column(db.String(32), unique=True, nullable=False)
     passhash = db.Column(db.String(512), nullable=False)
     name = db.Column(db.String(64), nullable=False)
+    is_admin = db.Column(db.Boolean, nullable=False, default=False)
 
     @property
     def password(self):
@@ -58,3 +59,9 @@ class Order(db.Model):
 # create database tables if they don't exist
 with app.app_context():
     db.create_all()
+    # create admin user if not exists
+    admin = User.query.filter_by(username='admin').first()
+    if not admin:
+        admin = User(username='admin', name='Administrator', password='admin', is_admin=True)
+        db.session.add(admin)
+        db.session.commit()

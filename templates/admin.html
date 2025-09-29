@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Admin Dashboard - GreenCart
+{% endblock %}
+{% block content %}
+    <h1>Admin Dashboard</h1>
+    <div class="heading">
+        <h2 class="text-muted">Categories</h2>
+        <a class="btn btn-success" href="{{url_for('add_category')}}">
+            Add
+            <i class="fas fa-plus fa-xs"></i>
+        </a>
+    </div>
+    <table class="table">
+
+    </table>
+{% endblock %}
+{% block styles %}
+<style>
+    .heading{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    h1,h2 {
+        text-align: center;
+    }
+</style>
+{% endblock %}
