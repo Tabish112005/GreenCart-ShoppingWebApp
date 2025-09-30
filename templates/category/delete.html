@@ -1,0 +1,27 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Delete Category - GreenCart
+{% endblock %}
+{% block content %}
+    <h1>Add Category</h1>
+    <h3 class="text-center text-danger">
+        Are you sure you want to delete the category 
+        <strong>{{ category.name }}</strong>
+        ?
+    </h3>
+    <form method="post" class="form text-center">
+        <input type="submit" value="Delete" class="btn btn-danger">
+    </form>
+{% endblock %}
+{% block styles %}
+<style>
+    h1 {
+        text-align: center;
+    }
+    h3{
+        height: 50%;
+        margin: 32px auto;
+    }
+</style>
+{% endblock %}

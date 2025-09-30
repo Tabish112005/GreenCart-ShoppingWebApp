@@ -29,7 +29,7 @@ def admin():
     if not user.is_admin:
         flash('Access denied.')
         return redirect(url_for('index'))
-    return render_template('admin.html', user=user)
+    return render_template('admin.html', user=user, categories=Category.query.all())
 
 @app.route('/profile')
 @auth_required
@@ -121,4 +121,47 @@ def orders():
 @app.route('/category/add')
 @auth_required
 def add_category():
+    return render_template('category/add.html', user=User.query.get(session['user_id']))
+
+@app.route('/category/add', methods=['POST'])
+@auth_required
+def add_category_post():
+    name = request.form.get('name')
+    if name == '':
+        flash('Category name is required.')
+        return redirect(url_for('add_category'))
+    if len(name) > 64:
+        flash('Category name is too long (max 64 characters).')
+        return redirect(url_for('add_category'))
+    category = Category(name=name)
+    db.session.add(category)
+    db.session.commit()
+    flash('Category added successfully.')
+    return redirect(url_for('admin'))
+
+@app.route('/category/<int:id>/show')
+@auth_required
+def show_category(id):
     return ""
+
+@app.route('/category/<int:id>/edit')
+@auth_required
+def edit_category(id):
+    return ""
+
+@app.route('/category/<int:id>/delete')
+@auth_required
+def delete_category(id):
+    return render_template('category/delete.html', user=User.query.get(session['user_id']), category=Category.query.get(id))
+
+@app.route('/category/<int:id>/delete', methods=['POST'])
+@auth_required
+def delete_category_post(id):
+    category = Category.query.get(id)
+    if not category:
+        flash('Category does not exist.')
+        return redirect(url_for('admin'))
+    db.session.delete(category)
+    db.session.commit()
+    flash('Category deleted successfully.')
+    return redirect(url_for('admin'))
