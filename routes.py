@@ -2,6 +2,8 @@ from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 
 from models import db, User, Product, Category, Cart, Order
+import datetime
+import re
 
 from app import app
 def auth_required(func):
@@ -10,6 +12,19 @@ def auth_required(func):
         if 'user_id' not in session:
             flash('Please log in to access this page.')
             return redirect(url_for('login'))
+        return func(*args, **kwargs)
+    return inner
+
+def admin_required(func):
+    @wraps(func)
+    def inner(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to access this page.')
+            return redirect(url_for('login'))
+        user = User.query.get(session['user_id'])
+        if not user.is_admin:
+            flash('You are not authorized to view this page.')
+            return redirect(url_for('index'))
         return func(*args, **kwargs)
     return inner
 
@@ -23,7 +38,7 @@ def index():
         return render_template('index.html', user=User.query.get(session['user_id']))
     
 @app.route('/admin')
-@auth_required
+@admin_required
 def admin():
     user = User.query.get(session['user_id'])
     if not user.is_admin:
@@ -119,12 +134,12 @@ def orders():
     return ""
 
 @app.route('/category/add')
-@auth_required
+@admin_required 
 def add_category():
     return render_template('category/add.html', user=User.query.get(session['user_id']))
 
 @app.route('/category/add', methods=['POST'])
-@auth_required
+@admin_required
 def add_category_post():
     name = request.form.get('name')
     if name == '':
@@ -140,22 +155,188 @@ def add_category_post():
     return redirect(url_for('admin'))
 
 @app.route('/category/<int:id>/show')
-@auth_required
+@admin_required
 def show_category(id):
-    return ""
+    return render_template('category/show.html', user=User.query.get(session['user_id']), category=Category.query.get(id))
+
+@app.route('/product/add')
+@admin_required
+def add_product():
+    args = request.args
+    if 'category_id' in args:
+        if Category.query.get(int(args.get('category_id'))):
+            category_id = int(args.get('category_id'))
+
+    return render_template('product/add.html', 
+                           user=User.query.get(session['user_id']), 
+                           category_id=category_id,
+                           categories=Category.query.all(),
+                           nowstring = datetime.datetime.now().strftime("%Y-%m-%d")
+                           )                                                      
+
+@app.route('/product/add', methods=['POST'])
+@admin_required
+def add_product_post():
+    name = request.form.get('name')
+    quantity = request.form.get('quantity')
+    price = request.form.get('price')
+    category = request.form.get('category')
+    man_date = request.form.get('manufacture_date')
+    if len(name) > 64:
+        flash('Product name is too long (max 64 characters).')
+        return redirect(url_for('add_product'))
+    if quantity == '':
+        flash('Quantity is required.')
+        return redirect(url_for('add_product'))
+    if quantity.isdigit() == False:
+        flash('Quantity must be a number.')
+        return redirect(url_for('add_product'))
+    quantity = int(quantity)
+    if price == '':
+        flash('Price is required.')
+        return redirect(url_for('add_product'))
+    if not re.match(r'^\d+(\.\d+)?$', price) :
+        flash('Price must be a number.')
+        return redirect(url_for('add_product'))
+    price = int(price)
+    if category == '':
+        flash('Category is required.')
+        return redirect(url_for('add_product'))
+    category = Category.query.get(category)
+    if not category:
+        flash('Category does not exist.')
+        return redirect(url_for('add_product'))
+    if man_date == '':
+        flash('Manufacture date is required.')
+        return redirect(url_for('add_product'))
+    try:
+        man_date = datetime.datetime.strptime(man_date, "%Y-%m-%d")
+    except ValueError:
+        flash('Invalid manufacture date.')
+        return redirect(url_for('add_product'))
+    
+    product = Product(name=name, quantity=quantity, price=price, category=category, man_date=man_date)
+    db.session.add(product)
+    db.session.commit()
+    flash('Product added successfully.')
+    return redirect(url_for('show_category', id=category.id))
+
+@app.route('/product/<int:id>/edit')
+@admin_required
+def edit_product(id):
+    product = Product.query.get(id)
+    return render_template('product/edit.html', user=User.query.get(session['user_id']),
+                           product=Product.query.get(id),
+                           categories = Category.query.all(),
+                           nowstring = datetime.datetime.now().strftime("%Y-%m-%d"),
+                           manufacture_date = product.man_date.strftime("%Y-%m-%d")
+                            )
+
+@app.route('/product/<int:id>/edit', methods=['POST'])
+@admin_required
+def edit_product_post(id):
+    name = request.form.get('name')
+    quantity = request.form.get('quantity')
+    price = request.form.get('price')
+    category = request.form.get('category')
+    man_date = request.form.get('manufacture_date')
+    if len(name) > 64:
+        flash('Product name is too long (max 64 characters).')
+        return redirect(url_for('add_product'))
+    if quantity == '':
+        flash('Quantity is required.')
+        return redirect(url_for('add_product'))
+    if quantity.isdigit() == False:
+        flash('Quantity must be a number.')
+        return redirect(url_for('add_product'))
+    quantity = int(quantity)
+    if price == '':
+        flash('Price is required.')
+        return redirect(url_for('add_product'))
+    if not re.match(r'^\d+(\.\d+)?$', price) :
+        flash('Price must be a number.')
+        return redirect(url_for('add_product'))
+    price = int(price)
+    if category == '':
+        flash('Category is required.')
+        return redirect(url_for('add_product'))
+    category = Category.query.get(category)
+    if not category:
+        flash('Category does not exist.')
+        return redirect(url_for('add_product'))
+    if man_date == '':
+        flash('Manufacture date is required.')
+        return redirect(url_for('add_product'))
+    try:
+        man_date = datetime.datetime.strptime(man_date, "%Y-%m-%d")
+    except ValueError:
+        flash('Invalid manufacture date.')
+        return redirect(url_for('add_product'))
+    
+    product = Product.query.get(id)
+    product.name = name
+    product.quantity = quantity
+    product.price = price 
+    product.category = category
+    product.man_date = man_date
+    db.session.add(product)
+    db.session.commit()
+    flash('Product edited successfully.')
+    return redirect(url_for('show_category', id=category.id))
+
+@app.route('/product/<int:id>/delete')
+@admin_required
+def delete_product(id):
+    product = Product.query.get(id)
+    if not product:
+        flash('Product does not exist.')
+        return redirect(url_for('admin'))
+    return render_template('product/delete.html', user=User.query.get(session['user_id']), product=product)
+
+@app.route('/product/<int:id>/delete', methods=['POST'])
+@admin_required
+def delete_product_post(id):
+    product = Product.query.get(id)
+    if not product:
+        flash('Product does not exist.')
+        return redirect(url_for('admin'))
+    db.session.delete(product)
+    db.session.commit()
+    flash('Product deleted successfully.')
+    return redirect(url_for('admin'))
 
 @app.route('/category/<int:id>/edit')
-@auth_required
+@admin_required
 def edit_category(id):
-    return ""
+    return render_template ('category/edit.html', user=User.query.get(session['user_id']), category=Category.query.get(id))
+
+@app.route('/category/<int:id>/edit', methods=['POST'])
+@admin_required
+def edit_category_post(id):
+    category = Category.query.get(id)
+    name = request.form.get('name')
+    if name == '':
+        flash('Category name cannot be empty.')
+        return redirect(url_for('edit_category', id=id))
+    if len(name) > 64:
+        flash('Category name is too long (max 64 characters).')
+        return redirect(url_for('edit_category', id=id))
+    category.name = name
+    db.session.commit()
+    flash('Category updated successfully.')
+    return redirect(url_for('admin'))
 
 @app.route('/category/<int:id>/delete')
-@auth_required
+@admin_required
 def delete_category(id):
-    return render_template('category/delete.html', user=User.query.get(session['user_id']), category=Category.query.get(id))
+    category = Category.query.get(id)
+    if not category:
+        flash('Category does not exist.')
+        return redirect(url_for('admin'))
+    return render_template('category/delete.html', user=User.query.get(session['user_id']), category=category)
 
 @app.route('/category/<int:id>/delete', methods=['POST'])
-@auth_required
+@admin_required
 def delete_category_post(id):
     category = Category.query.get(id)
     if not category:

@@ -26,7 +26,7 @@
                 <tr>
                     <td>{{ category.id }}</td>
                     <td>{{ category.name }}</td>
-                    <td>{{ category.product|length }}</td>
+                    <td>{{ category.products|length }}</td>
                     <td>
                         <a href="{{url_for('show_category', id=category.id)}}" class="btn btn-outline-success">
                             <i class="fas fa-search"></i>

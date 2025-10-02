@@ -1,0 +1,65 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+    Edit Product - GreenCart
+{% endblock %}
+{% block content %}
+    <h1>Edit Product</h1>
+    <form method="post" class="form">
+        <!-- Product Name -->
+        <label for="name" class="form-label">Name:
+            <input type="text" class="form-control" id="name" name="name" required value="{{product.name}}"/>
+        </label>
+        <!-- Quantity -->
+        <label for="quantity" class="form-label">Quantity:
+            <input type="number" class="form-control" id="quantity" name="quantity" required value="{{product.quantity}}"/>
+        </label>
+        <!-- Price -->
+        <label for="price" class="form-label">Price:
+            <input type="number" step="0.01" class="form-control" id="price" name="price" required value="{{product.price}}"/>
+        </label>
+        <!-- Product Category -->
+        <label for="category" class="form-label">Category:
+            <select class="form-select" id="category" name="category" required>
+                {% for category in categories %}
+                    {% if category.id == product.category_id %}
+                        <option value="{{ category.id }}" selected>{{ category.name }}</option>
+                    {% else %}
+                        <option value="{{ category.id }}">{{category.name}}</option>
+                    {% endif %}
+                {% endfor %}
+            </select> 
+        </label>
+        <!-- Manufacture Date-->
+        <label for="manufacture_date" class="form-label">Manufacture Date:
+            <input type="date" name="manufacture_date"
+            max="{{ nowstring }}"
+            value="{{manufacture_date}}"
+            id="manufacture_date" class="form-control" required/>
+        </label>
+        <!-- Save Button -->
+        <div class="d-flex justify-content-center"><input type="submit" value="Save" class="btn btn-success mt-3" ></div>
+    </form>
+    
+    
+{% endblock %}
+{% block styles %}
+<style>
+    h1 {
+        text-align: center;
+    }
+    .form {
+        margin-top: 32px;
+        display: flex;
+        flex-direction: column;
+        width: 50%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    select{
+        width: 100%;
+    }
+
+</style>
+{% endblock %}
+    
