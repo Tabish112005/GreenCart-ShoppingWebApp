@@ -35,7 +35,7 @@ def index():
     if user.is_admin:
         return redirect(url_for('admin'))
     else:
-        return render_template('index.html', user=User.query.get(session['user_id']))
+        return render_template('index.html', user=User, categories=Category.query.all())
     
 @app.route('/admin')
 @admin_required

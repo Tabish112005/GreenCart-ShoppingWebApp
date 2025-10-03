@@ -5,5 +5,16 @@
 {% endblock %}
 
 {% block content %}
-Hello {{user.name}}!
+{% include 'searchbar.html' with context %}
+
+<div class="categories-list">
+    {% for category in categories %}
+        <div class="category">
+            <h3>{{category.name}}</h3>
+            <div class="product-list">
+                
+            </div>
+        </div>
+</div>
+
 {% endblock %}
