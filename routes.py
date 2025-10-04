@@ -12,6 +12,11 @@ def auth_required(func):
         if 'user_id' not in session:
             flash('Please log in to access this page.')
             return redirect(url_for('login'))
+        user = User.query.get(session['user_id'])
+        if not user:
+            flash('User not found. Please login again.')
+            session.pop('user_id', None)
+            return redirect(url_for('login'))
         return func(*args, **kwargs)
     return inner
 
@@ -122,16 +127,6 @@ def register_post():
 def logout():
     session.pop('user_id', None)
     return redirect(url_for('login'))
-
-@app.route('/cart')
-@auth_required
-def cart():
-    return ""
-
-@app.route('/orders')
-@auth_required
-def orders():
-    return ""
 
 @app.route('/category/add')
 @admin_required 
@@ -346,3 +341,23 @@ def delete_category_post(id):
     db.session.commit()
     flash('Category deleted successfully.')
     return redirect(url_for('admin'))
+
+
+
+#------------ User Carting and Orders ------------#
+
+@app.route('/add_to_cart/<int:product_id>', methods=['POST'])
+@auth_required
+def add_to_cart(product_id):
+    quantity = request.form.get('quantity')
+    return " add to cart for product id: " +str(product_id) + " quantity: " + str(request.form.get('quantity'))
+
+@app.route('/cart')
+@auth_required
+def cart():
+    return ""
+
+@app.route('/orders')
+@auth_required
+def orders():
+    return ""
