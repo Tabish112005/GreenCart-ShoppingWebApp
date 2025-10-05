@@ -21,13 +21,15 @@
                                 </div>
                                 <div class="add-to-cart">
                                     <form action="{{url_for('add_to_cart', product_id=product.id)}}" method="POST" class="product-quantity">
-                                        <button onclick="decreaseqty({{product.id}})" type="button" class="btn btn-outline-danger">
-                                            <i class="fas fa-minus fa-xs"></i>
-                                        </button>
-                                        <input class="form-control quantity-input-{{product.id}}" type="number" name="quantity" id="quantity" value="1" min="1" max="{{product.quantity}}" required >
-                                        <button onclick="increaseqty({{product.id}})" type="button" class="btn btn-outline-success">
-                                            <i class="fas fa-plus fa-xs"></i>
-                                        </button>
+                                        <div class="quantity-buttons">
+                                            <button onclick="decreaseqty({{product.id}})" type="button" class="btn btn-outline-danger">
+                                                <i class="fas fa-minus fa-xs"></i>
+                                            </button>
+                                            <input class="form-control quantity-input-{{product.id}}" type="number" name="quantity" id="quantity-{{product.id}}" value="1" min="1" max="{{product.quantity}}" required >
+                                            <button onclick="increaseqty({{product.id}},{{product.quantity}})" type="button" class="btn btn-outline-success">
+                                                <i class="fas fa-plus fa-xs"></i>
+                                            </button>
+                                        </div>
                                         <button type="submit" class="submit-button">
                                             <i class="fas fa-cart-plus fa-xs"></i>
                                             Add to Cart 
@@ -92,7 +94,6 @@
     .add-to-cart .submit-button {
         padding: 8px 16px;
         border: none;
-        font-size: 15px;
         border-radius: 8px;
         background-color: #0d6efd;
         color: #fff;
@@ -110,6 +111,12 @@
     }
     .product-quantity {
         display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+    .quantity-buttons {
+        display: flex;
         align-items: center;
         justify-content: center;
         margin-top: 16px;
@@ -118,17 +125,25 @@
         margin-right: 8px;
     }
     .product-quantity input {
-        width: 50px;
+        margin: 0 8px;
+        width: 3rem;
         text-align: center;
+        -moz-apperance: textfield;
+    }
+    .product-quantity input::-webkit-outer-spin-button, .product-quantity input::-webkit-inner-spin-button{
+        -webkit-appearance: none;
+        margin: 0;
     }
 </style>
 {% endblock %}
 
 {% block script %}
 <script>
-    function increaseqty(id) {
+    function increaseqty(id, max) {
         var quantity = document.querySelector(".quantity-input-" + id);
-        quantity.value = parseInt(quantity.value) + 1;
+        if(quantity.value < max){
+            quantity.value = parseInt(quantity.value) + 1;
+        }
     }
     function decreaseqty(id) {
         var quantity = document.querySelector(".quantity-input-" + id);
