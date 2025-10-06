@@ -13,6 +13,7 @@
                 <h3>{{category.name}}</h3>
                 <div class="product-list">
                     {% for product in category.products %}
+                    {% if (price and product.price <= price ) or (name and name.lower() in product.name.lower()) or (not price and not name) %}                   
                         <div class="product">
                                 <div class="product-info">
                                     <h4>{{product.name}}</h4>
@@ -38,6 +39,7 @@
                                 </div>
                             </a>
                         </div>
+                    {% endif %}    
                     {% endfor %}
                 </div>
             </a>

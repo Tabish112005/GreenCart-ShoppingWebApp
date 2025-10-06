@@ -32,15 +32,6 @@ def admin_required(func):
             return redirect(url_for('index'))
         return func(*args, **kwargs)
     return inner
-
-@app.route('/')
-@auth_required
-def index():
-    user = User.query.get(session['user_id'])
-    if user.is_admin:
-        return redirect(url_for('admin'))
-    else:
-        return render_template('index.html', user=User, categories=Category.query.all())
     
 @app.route('/admin')
 @admin_required
@@ -344,18 +335,72 @@ def delete_category_post(id):
 
 
 
-#------------ User Carting and Orders ------------#
+#------------ User functions ------------#
+
+
+@app.route('/')
+@auth_required
+def index():
+    user = User.query.get(session['user_id'])
+    if user.is_admin:
+        return redirect(url_for('admin'))
+    parameter = request.args.get('parameter')
+    query = request.args.get('query')
+    parameters = {
+        'product': 'Product Name',
+        'category': 'Category Name',
+        'price': 'Max Price'
+    }
+    if not parameter or not query:
+        return render_template('index.html', user=user, categories=Category.query.all(), parameters=parameters)
+    if parameter == 'product':
+        return render_template('index.html', user=user, categories=Category.query.all(), name=query, query=query, parameter=parameter, parameters=parameters)
+    if parameter == 'category':
+        categories = Category.query.filter(Category.name.like('%' + query + '%')).all()
+        return render_template('index.html', user=user, categories=categories, query=query, parameter=parameter, parameters=parameters)
+    if parameter == 'price':
+        return render_template('index.html', user=user, categories=Category.query.all(), price=float(query), query=query, parameter=parameter, parameters=parameters)
+    
+    return render_template('index.html', user=user, categories=Category.query.all(), parameters=parameters)
 
 @app.route('/add_to_cart/<int:product_id>', methods=['POST'])
 @auth_required
 def add_to_cart(product_id):
     quantity = request.form.get('quantity')
-    return " add to cart for product id: " +str(product_id) + " quantity: " + str(request.form.get('quantity'))
+    if not quantity or quantity=='':
+        flash('Quantity cannot be empty.')
+        return redirect(url_for('index'))
+    if quantity.isdigit() == False:
+        flash('Quantity must be a number.')
+        return redirect(url_for('index'))
+    quantity = int(quantity)
+    if quantity <= 0:
+        flash('Quantity must be 1 atleast.')
+        return redirect(url_for('index'))
+    product = Product.query.get(product_id)
+    if product.quantity < quantity:
+        flash('Not enough stock.')
+        return redirect(url_for('index'))
+    
+    cart = Cart.query.filter_by(user_id=session['user_id']).filter_by(product_id=product_id).first()
+    if cart:
+        if cart.quantity + quantity > product.quantity:
+            flash('Quantity exceeds stock.')
+            return redirect(url_for('index'))
+        cart.quantity += quantity
+        db.session.commit()
+        flash('Quantity updated successfully.')
+        return redirect(url_for('index'))
+    cart = Cart(user_id=session['user_id'], product_id=product_id, quantity=quantity)
+    db.session.add(cart)
+    db.session.commit()
+    flash('Product added to cart successfully.')
+    return redirect(url_for('index'))
 
 @app.route('/cart')
 @auth_required
 def cart():
-    return ""
+    return render_template('cart.html', user=User.query.get(session['user_id']), cart=Cart.query.filter_by(user_id=session['user_id']).all())
 
 @app.route('/orders')
 @auth_required

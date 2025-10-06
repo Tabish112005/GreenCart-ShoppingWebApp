@@ -6,13 +6,13 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav">
-        <! -- render auth links if not looged in, else normal links -->
+        <! -- render auth links if not looged in, else normal links --!>
         {% if user %}
         <li class="nav-item">
           <a class="nav-link" href="{{url_for('profile')}}">Profile</a>
         </li>
         
-        {% if user.is_admin %}
+        {% if not user.is_admin %}
           <li class="nav-item">
             <a href="{{url_for('cart')}}" class="nav-link">Cart</a>
           </li>

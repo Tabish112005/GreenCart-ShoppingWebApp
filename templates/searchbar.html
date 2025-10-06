@@ -1,12 +1,20 @@
 <div class="container-fluid p-3">
     <form>  
-        <select name="parameter" id="parameter" class="form-select" >
-            <option value="name" selected>Name</option>
-            <option value="category">Category</option>
-            <option value="price">Price</option>
+        <select name="parameter" id="parameter" class="form-select">
+            {% for param in parameters %}
+                {% if param == parameter %}
+                    <option value="{{param}}" selected>{{parameters[param]}}</option>
+                {% else %}
+                    <option value="{{param}}">{{parameters[param]}}</option>
+                {% endif %}
+            {% endfor %}  
         </select>            
-        <input type="text" class="form-control" id="search" name="search" placeholder="Search">
-        <button type="submit" class="btn btn-outline-primary">
+        <input type="text" class="form-control" id="query" name="query" placeholder="Search" value="{{query}}">
+        <button type="button" class="btn btn-outline-danger clear-button" onclick="clearSearch()">
+            <i class="fas fa-backspace    "></i>
+            Clear
+        </button>
+        <button type="submit" class="btn btn-outline-primary search-button">
             <i class="fas fa-search"></i>
             Search
         </button>   
@@ -24,11 +32,27 @@
     #parameter{
         margin-left: 10px;
         margin-right: 10px;
-        width: 10%;
+        width: 20%;
     }
     #search{
         margin-left: 10px;
         margin-right: 10px;
-        width: 50%;
+        width: 40%;
+    }
+    .clear-button{
+        margin-left: 10px;
+        margin-right: 10px;
+        width: 10%;
+    }
+    .search-button{
+        margin-left: 10px;
+        margin-right: 10px;
+        width: 15%;
     }
 </style>
+
+<script>
+    function clearSearch(){
+        window.location.href = window.location.href.split('?')[0];
+    }
+</script>
