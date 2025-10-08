@@ -363,7 +363,7 @@ def index():
     
     return render_template('index.html', user=user, categories=Category.query.all(), parameters=parameters)
 
-@app.route('/add_to_cart/<int:product_id>', methods=['POST'])
+@app.route('/cart/<int:product_id>/add', methods=['POST'])
 @auth_required
 def add_to_cart(product_id):
     quantity = request.form.get('quantity')
@@ -400,7 +400,26 @@ def add_to_cart(product_id):
 @app.route('/cart')
 @auth_required
 def cart():
-    return render_template('cart.html', user=User.query.get(session['user_id']), cart=Cart.query.filter_by(user_id=session['user_id']).all())
+    carts = Cart.query.filter_by(user_id=session['user_id']).all()
+    total = sum([cart.product.price * cart.quantity for cart in carts])
+    return render_template('cart.html', user=User.query.get(session['user_id']), carts=carts, total=total)
+
+@app.route('/cart/<int:product_id>/delete', methods=['POST'])
+@auth_required
+def delete_from_cart(product_id):
+    cart = Cart.query.filter_by(user_id=session['user_id']).filter_by(product_id=product_id).first()
+    if not cart:
+        flash('Product not found in cart.')
+        return redirect(url_for('cart'))
+    db.session.delete(cart)
+    db.session.commit()
+    flash('Product removed from cart successfully.')
+    return redirect(url_for('cart'))
+
+@app.route('/cart/place_order/', methods=['POST'])
+@auth_required
+def place_order():
+    return "Order Placed"
 
 @app.route('/orders')
 @auth_required

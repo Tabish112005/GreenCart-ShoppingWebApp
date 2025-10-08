@@ -32,6 +32,9 @@ class Product(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Float, nullable=False)
     man_date = db.Column(db.Date, nullable=False)
+    
+    ## relationships
+    cart = db.relationship('Cart', backref='product', lazy=True)
 
 class Category(db.Model):
     __tablename__ = 'category'
