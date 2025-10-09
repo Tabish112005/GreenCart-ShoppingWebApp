@@ -20,6 +20,7 @@
                                     <p>&#8377;{{product.price}}</p>
                                     <p>Available: {{product.quantity}}</p>
                                 </div>
+                                {% if product.quantity > 0 %}
                                 <div class="add-to-cart">
                                     <form action="{{url_for('add_to_cart', product_id=product.id)}}" method="POST" class="product-quantity">
                                         <div class="quantity-buttons">
@@ -37,6 +38,12 @@
                                         </button>
                                     </form>
                                 </div>
+                                {% else %}
+                                <button type="button" class="btn btn-outline-danger" disabled>
+                                    <i class="fas fa-times    "></i>
+                                    Out of Stock
+                                </button>
+                                {% endif %}    
                             </a>
                         </div>
                     {% endif %}    

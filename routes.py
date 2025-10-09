@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 
-from models import db, User, Product, Category, Cart, Order
+from models import db, User, Product, Category, Cart, Order, Transaction
 import datetime
 import re
 
@@ -416,12 +416,31 @@ def delete_from_cart(product_id):
     flash('Product removed from cart successfully.')
     return redirect(url_for('cart'))
 
-@app.route('/cart/place_order/', methods=['POST'])
+@app.route('/cart/place_order', methods=['POST'])
 @auth_required
 def place_order():
-    return "Order Placed"
+    items = Cart.query.filter_by(user_id=session['user_id']).all()
+    if not items:
+        flash('No items in cart.')
+        return redirect(url_for('cart'))
+    for item in items:
+        if item.quantity > item.product.quantity:
+            flash('Quantity of '+ item.product.name +' must be less than or equal to ' + str(item.product.quantity) + '.')
+            return redirect(url_for('cart'))
+    transaction = Transaction(user_id=session['user_id'], total=0)
+    for item in items:
+        item.product.quantity -= item.quantity
+        order = Order(product_id=item.product_id, quantity=item.quantity, price=item.product.price, transaction=transaction)
+        db.session.add(order)
+        transaction.total += order.price * item.quantity
+        db.session.delete(item)
+        db.session.commit()
+    flash('Order placed successfully.')
+    return redirect(url_for('orders'))
 
 @app.route('/orders')
 @auth_required
 def orders():
-    return ""
+    user = User.query.get(session['user_id'])
+    transactions = Transaction.query.filter_by(user_id=session['user_id']).order_by(Transaction.datetime.desc()).all()
+    return render_template('orders.html', user=user, transactions=transactions)
